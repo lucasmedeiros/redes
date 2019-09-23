@@ -27,6 +27,8 @@ def get_mimetype(file_ext):
 		mimetype = 'Content-Type: audio/ogg\r\n'
 	elif (file_ext == '.mp4'):
 		mimetype = 'Content-Type: video/mp4\r\n'
+	elif (file_ext == '.pdf'):
+		mimetype = 'Content-Type: application/pdf\r\n'
 
 	return mimetype
 

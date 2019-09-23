@@ -8,10 +8,9 @@ serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
 
-print ('Server is running...')
+print ('Server is running on http://localhost:{}/'.format(serverPort))
 
-def get_mimetype(file_path):
-	filename, file_ext = os.path.splitext(file_path)
+def get_mimetype(file_ext):
 	mimetype = ''
 
 	if (file_ext == '.txt'):
@@ -34,21 +33,39 @@ def get_mimetype(file_path):
 while 1:
 	con, addr = serverSocket.accept()
 	req = con.recv(1024).decode('utf-8')
-	line = req.split()
+	line = req.split(' ')
+
+	print('user {} was connected.'.format(addr))
+
 	method = line[0]
-	httpVersion = line[2]
 	path = line[1]
+	http_version = line[2].split('\r\n')[0]
+	header = ''
 	try:
+		print(path)
+		if path == '/':
+			path = '/index.html'
 		file_o = open('.' + path, 'rb')
 		response = file_o.read()
-		header = 'HTTP/1.1 200 OK\r\n'
-		mimetype = get_mimetype(path)
+		file_o.close()
+		header = '{} 200 OK\r\n'.format(http_version)
+
+		file_name, file_ext = os.path.splitext(path)
+
+		mimetype = get_mimetype(file_ext)
 		header += mimetype
+
 		final = header.encode('utf-8')
+		final += '\r\n'.encode('utf-8')
 		final += response
 		final += "\r\n".encode('utf-8')
+
+		print('{} {} - {} 200 OK'.format(method, path, file_name))
+
 		con.send(final)
 	except:
+		header = '{} 404 NOT FOUND\r\n'.format(http_version)
+		print('{} {} - 404 NOT FOUND'.format(method, path))
 		error = 'Arquivo ' + path + ' nao encontrado.'
 		con.send(error.encode('utf-8'))
 	con.close()

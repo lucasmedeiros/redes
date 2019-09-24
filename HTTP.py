@@ -60,14 +60,23 @@ while 1:
 		final = header.encode('utf-8')
 		final += '\r\n'.encode('utf-8')
 		final += response
-		final += "\r\n".encode('utf-8')
+		final += "\r\n\r\n".encode('utf-8')
 
 		print('{} {} - {} 200 OK'.format(method, path, file_name))
 
 		con.send(final)
 	except:
-		header = '{} 404 NOT FOUND\r\n'.format(http_version)
-		print('{} {} - 404 NOT FOUND'.format(method, path))
-		error = 'Arquivo ' + path + ' nao encontrado.'
-		con.send(error.encode('utf-8'))
+		page_404 = open('./404.html', 'rb')
+		response = page_404.read()
+		page_404.close()
+		header = '{} 200 OK\r\n'.format(http_version)
+		mimetype = 'Content-Type: text/html\r\n'
+
+		final = header.encode('utf-8')
+		final += '\r\n'.encode('utf-8')
+		final += response
+		final += "\r\n".encode('utf-8')
+		print('{} {} 404 Returning to fallback page...'.format(method, path))
+		con.send(final)
+
 	con.close()

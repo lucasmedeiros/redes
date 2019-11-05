@@ -43,9 +43,9 @@ class UDPClient():
         response = self.socket.recvfrom(1024)
 
         if response[0].decode('utf-8') != 'ACK':
+            self.socket.sendto('ACK'.encode('utf-8'), self.dest)
             print(response[0].decode('utf-8'))
             responses.put(response)
-            self.socket.sendto('ACK'.encode('utf-8'), self.dest)
 
     def wait_for_server_ack(self, acks):
         print('Esperando ACK do servidor...')

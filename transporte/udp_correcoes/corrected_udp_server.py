@@ -17,6 +17,7 @@ class UDPServer():
 
         while True:
             operation, client = self.socket.recvfrom(1024)
+            print('Obtendo requisição de {}: {}'.format(client, operation))
 
             Thread(target=self.req_handle,
                    args=(operation, client, )).start()
@@ -26,37 +27,29 @@ class UDPServer():
 
         elements = operation.decode('utf-8').split()
 
-        try:
-            operation = elements[0]
-            first_value = int(elements[1])
-            second_value = int(elements[2])
+        if elements[0] != 'ACK':
+            try:
+                operation = elements[0]
+                first_value = int(elements[1])
+                second_value = int(elements[2])
 
-            if operation == 'ADD':
-                self.response = str(first_value + second_value)
-            elif operation == 'SUB':
-                self.response = str(first_value - second_value)
-            elif operation == 'MULT':
-                self.response = str(first_value * second_value)
-            elif operation == 'EXP':
-                self.response = str(first_value ** second_value)
-            elif operation == 'DIV ' and second_value != 0:
-                self.response = str(first_value / second_value)
+                if operation == 'ADD':
+                    self.response = str(first_value + second_value)
+                elif operation == 'SUB':
+                    self.response = str(first_value - second_value)
+                elif operation == 'MULT':
+                    self.response = str(first_value * second_value)
+                elif operation == 'EXP':
+                    self.response = str(first_value ** second_value)
+                elif operation == 'DIV ' and second_value != 0:
+                    self.response = str(first_value / second_value)
 
-        except:
-            self.response = 'Requisição inválida'
+            except:
+                self.response = 'Requisição inválida'
 
-        acks = Queue()
-
-        while True:
             self.socket.sendto(self.response.encode('utf-8'), client)
-            waiting_thread = Thread(
-                target=self.wait_for_client_ack, args=(acks,))
-            waiting_thread.start()
-            waiting_thread.join(timeout=1)
-
-            if acks.qsize() > 0 and acks.get()[0].decode('utf-8') == 'ACK':
-                print('ACK do cliente recebido...')
-                break
+        else:
+            print('ACK do cliente recebido...')
 
     def wait_for_client_ack(self, acks):
         print('Esperando ACK do cliente...')

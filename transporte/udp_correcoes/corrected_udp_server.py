@@ -48,11 +48,11 @@ class UDPServer():
         acks = Queue()
 
         while True:
-            self.socket.sendto(str(self.response).encode('utf-8'), client)
+            self.socket.sendto(self.response.encode('utf-8'), client)
             waiting_thread = Thread(
                 target=self.wait_for_client_ack, args=(acks,))
             waiting_thread.start()
-            waiting_thread.join(timeout=0.1)
+            waiting_thread.join(timeout=1)
 
             if acks.qsize() > 0 and acks.get()[0].decode('utf-8') == 'ACK':
                 print('ACK do cliente recebido...')

@@ -20,6 +20,7 @@ class UDPClient():
             main_thread = Thread(target=self.req_handle, args=(responses,))
             main_thread.start()
             main_thread.join(timeout=2)
+            main_thread._stop()
 
             if responses.qsize() > 0:
                 break
@@ -43,8 +44,8 @@ class UDPClient():
 
         if response[0].decode('utf-8') != 'ACK':
             print(response[0].decode('utf-8'))
-            self.socket.sendto('ACK'.encode('utf-8'), self.dest)
             responses.put(response)
+            self.socket.sendto('ACK'.encode('utf-8'), self.dest)
 
     def wait_for_server_ack(self, acks):
         print('Esperando ACK do servidor...')

@@ -1,13 +1,15 @@
 import socket
 from threading import Thread
+from queue import Queue
 
 
-class UDPServer(object):
+class UDPServer():
 
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.response = "VALOR INVALIDO"
 
     def run(self):
         self.socket.bind((self.ip, self.port))
@@ -28,24 +30,38 @@ class UDPServer(object):
             operation = elements[0]
             first_value = int(elements[1])
             second_value = int(elements[2])
-            response = 'VALOR INVALIDO'
 
             if operation == 'ADD':
-                response = str(first_value + second_value)
+                self.response = str(first_value + second_value)
             elif operation == 'SUB':
-                response = str(first_value - second_value)
+                self.response = str(first_value - second_value)
             elif operation == 'MULT':
-                response = str(first_value * second_value)
+                self.response = str(first_value * second_value)
             elif operation == 'EXP':
-                response = str(first_value ** second_value)
+                self.response = str(first_value ** second_value)
             elif operation == 'DIV ' and second_value != 0:
-                response = str(first_value / second_value)
+                self.response = str(first_value / second_value)
 
-            print(elements, response)
         except:
-            response = 'Requisição inválida'
+            self.response = 'Requisição inválida'
 
-        self.socket.sendto(str(response).encode('utf-8'), client)
+        acks = Queue()
+
+        while True:
+            self.socket.sendto(str(self.response).encode('utf-8'), client)
+            waiting_thread = Thread(
+                target=self.wait_for_client_ack, args=(acks,))
+            waiting_thread.start()
+            waiting_thread.join(timeout=0.1)
+
+            if acks.qsize() > 0 and acks.get()[0].decode('utf-8') == 'ACK':
+                print('ACK do cliente recebido...')
+                break
+
+    def wait_for_client_ack(self, acks):
+        print('Esperando ACK do cliente...')
+        message = self.socket.recvfrom(1024)
+        acks.put(message)
 
 
 if __name__ == "__main__":
